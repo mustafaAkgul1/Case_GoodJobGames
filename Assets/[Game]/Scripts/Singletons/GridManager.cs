@@ -16,6 +16,7 @@ public class GridManager : Operator
 
     [Space(10)]
     [Header("! Debug !")]
+    public List<GridTile> gridTiles;
     MatchItemTypesDataSO matchItemTypesData;
 
     void Start()
@@ -27,6 +28,7 @@ public class GridManager : Operator
 
     void SpawnGrid()
     {
+        gridTiles = new List<GridTile>(gridData.rowSize * gridData.columnSize);
         float _gridHalfSize = gridData.gridSize / 2f;
 
         float _columnSpawnOffsetY = ((gridData.gridSize * gridData.rowSize) / 2f) - _gridHalfSize;
@@ -53,12 +55,13 @@ public class GridManager : Operator
 
             for (int y = 0; y < gridData.columnSize; y++)
             {
-                Vector2 _spawnPoint = new Vector2(_columnSpawnOffsetX, _columnSpawnOffsetY);
-
                 GridTile _gridTile = Instantiate(gridTilePrefab, gridTileHolder);
 
+                Vector2 _spawnPoint = new Vector2(_columnSpawnOffsetX, _columnSpawnOffsetY);
                 int _rndMatchItemTypeIndex = Random.Range(0, _activeMatchItemTypes.Count);
                 _gridTile.InitGridTile(_spawnPoint, x, _activeMatchItemTypes[_rndMatchItemTypeIndex]);
+
+                gridTiles.Add(_gridTile);
 
                 _columnSpawnOffsetX += gridData.gridSize;
             }
@@ -68,6 +71,33 @@ public class GridManager : Operator
 
         _matchItemTypesCache.Clear();
         _activeMatchItemTypes.Clear();
+
+        HandleNeighboursAttachment();
+    }
+
+    void HandleNeighboursAttachment()
+    {
+        for (int i = 0; i < gridTiles.Count; i++)
+        {
+            List<GridTile> _neighbourTiles = new List<GridTile>(4);
+
+            int _leftNeighbourIndex = i - 1;
+            int _rightNeighbourIndex = i + 1;
+            int _upNeighbourIndex = i + gridData.columnSize;
+            int _downNeighbourIndex = i - gridData.columnSize;
+
+            int[] _neighbourIndexes = new int[4] { _leftNeighbourIndex, _rightNeighbourIndex, _upNeighbourIndex, _downNeighbourIndex };
+
+            for (int j = 0; j < _neighbourIndexes.Length; j++)
+            {
+                if (_neighbourIndexes[j] >= 0 && _neighbourIndexes[j] < gridTiles.Count)
+                {
+                    _neighbourTiles.Add(gridTiles[_neighbourIndexes[j]]);
+                }
+            }
+
+            gridTiles[i].SetNeighbours(_neighbourTiles);
+        }
     }
 
 

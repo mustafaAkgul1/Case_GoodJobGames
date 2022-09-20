@@ -15,16 +15,21 @@ public class GridTile : Operator
     [Space(10)]
     [Header("! Debug !")]
     public MatchItem activeMatchItem;
+    public List<GridTile> neighbourTiles = new();
     public int rowIndex;
 
     public void InitGridTile(Vector3 _localPosition, int _rowIndex, MatchItemTypes _matchItemType)
     {
         transform.localPosition = _localPosition;
-
-        activeMatchItem = MatchItemPoolManager.Instance.FetchFromPool();
-
         rowIndex = _rowIndex;
+
+        activeMatchItem = MatchItemPoolManager.Instance.FetchFromPool(); 
         activeMatchItem.SpawnOnGridTile(this, _matchItemType, rowIndex);
+    }
+
+    public void SetNeighbours(List<GridTile> _neighbourTiles)
+    {
+        neighbourTiles = _neighbourTiles;
     }
 
 
