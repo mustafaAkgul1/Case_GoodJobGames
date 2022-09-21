@@ -16,21 +16,15 @@ public class GridTile : Operator, IClickable
     [Header("! Debug !")]
     public MatchItem activeMatchItem;
     public List<GridTile> neighbourTiles = new();
-    public int rowIndex;
-    Transform _transform;
+    public Vector2Int coordIndex;
 
-    void Awake()
-    {
-        _transform = transform;
-    }
-
-    public void InitGridTile(Vector3 _localPosition, int _rowIndex, MatchItemTypes _matchItemType)
+    public void InitGridTile(Vector3 _localPosition, Vector2Int _coordIndex, MatchItemTypes _matchItemType)
     {
         transform.localPosition = _localPosition;
-        rowIndex = _rowIndex;
+        coordIndex = _coordIndex;
 
         activeMatchItem = MatchItemPoolManager.Instance.FetchFromPool(); 
-        activeMatchItem.SpawnOnGridTile(this, _matchItemType, rowIndex);
+        activeMatchItem.SpawnOnGridTile(this, _matchItemType, coordIndex);
     }
 
     public void SetNeighbours(List<GridTile> _neighbourTiles)
@@ -38,10 +32,10 @@ public class GridTile : Operator, IClickable
         neighbourTiles = _neighbourTiles;
     }
 
-    void OnMouseDown()
-    {
-        Clicked();
-    }
+    //void OnMouseDown() // Another option to handle click
+    //{
+    //    Clicked();
+    //}
 
     public void Clicked()
     {
@@ -58,7 +52,6 @@ public class GridTile : Operator, IClickable
     void TriggerClickFeeling()
     {
         //TODO : tween rotation
-        //Debug.Log("Clicked : " + gameObject.name + ", pos : " + transform.localPosition);
     }
 
     public bool CheckNeighbourTypeMatching(MatchItemTypes _matchItemType)
@@ -68,8 +61,7 @@ public class GridTile : Operator, IClickable
 
     public void Matched(GridTile _gridTile)
     {
-        //Test
-        Destroy(activeMatchItem.gameObject);
+        MatchItemPoolManager.Instance.AddToPool(activeMatchItem);
         activeMatchItem = null;
     }
 

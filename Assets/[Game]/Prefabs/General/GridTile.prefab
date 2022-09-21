@@ -48,7 +48,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   activeMatchItem: {fileID: 0}
   neighbourTiles: []
-  rowIndex: 0
+  coordIndex: {x: 0, y: 0}
 --- !u!114 &6251004463610513440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -72,5 +72,5 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 2, y: 1.85, z: 1}
-  m_Center: {x: 0, y: -0.17, z: 0}
+  m_Size: {x: 2.2, y: 2.2, z: 1}
+  m_Center: {x: 0, y: -0.165, z: 0}
