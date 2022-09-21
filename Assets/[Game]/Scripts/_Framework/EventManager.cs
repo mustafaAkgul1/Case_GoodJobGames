@@ -9,7 +9,7 @@ namespace CLUtils
 {
     public class EventManager<T>
     {
-        //public static Action<T> testEvent;
+        public static Action<T> OnGridClicked;
 
     } // class
 } // namespace

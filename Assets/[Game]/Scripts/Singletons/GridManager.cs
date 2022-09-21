@@ -16,8 +16,21 @@ public class GridManager : Operator
 
     [Space(10)]
     [Header("! Debug !")]
-    public List<GridTile> gridTiles;
+    //public List<GridTile> gridTiles;
+    public GridTile[,] gridTiles;
     MatchItemTypesDataSO matchItemTypesData;
+
+    #region Enable/Disable
+    void OnEnable()
+    {
+        EventManager<object[]>.OnGridClicked += OnGridClicked;
+    }
+
+    void OnDisable()
+    {
+        EventManager<object[]>.OnGridClicked -= OnGridClicked;
+    }
+    #endregion
 
     void Start()
     {
@@ -28,7 +41,9 @@ public class GridManager : Operator
 
     void SpawnGrid()
     {
-        gridTiles = new List<GridTile>(gridData.rowSize * gridData.columnSize);
+        //gridTiles = new List<GridTile>(gridData.rowSize * gridData.columnSize);
+        gridTiles = new GridTile[gridData.rowSize, gridData.columnSize];
+
         float _gridHalfSize = gridData.gridSize / 2f;
 
         float _columnSpawnOffsetY = ((gridData.gridSize * gridData.rowSize) / 2f) - _gridHalfSize;
@@ -57,11 +72,13 @@ public class GridManager : Operator
             {
                 GridTile _gridTile = Instantiate(gridTilePrefab, gridTileHolder);
 
+                _gridTile.gameObject.name += $"{x}_{y}";
+
                 Vector2 _spawnPoint = new Vector2(_columnSpawnOffsetX, _columnSpawnOffsetY);
                 int _rndMatchItemTypeIndex = Random.Range(0, _activeMatchItemTypes.Count);
                 _gridTile.InitGridTile(_spawnPoint, x, _activeMatchItemTypes[_rndMatchItemTypeIndex]);
 
-                gridTiles.Add(_gridTile);
+                gridTiles[x, y] = _gridTile;
 
                 _columnSpawnOffsetX += gridData.gridSize;
             }
@@ -75,28 +92,117 @@ public class GridManager : Operator
         HandleNeighboursAttachment();
     }
 
+    //void HandleNeighboursAttachment()
+    //{
+    //    for (int i = 0; i < gridTiles.Count; i++)
+    //    {
+    //        List<GridTile> _neighbourTiles = new List<GridTile>(4);
+
+    //        int _leftNeighbourIndex = i - 1;
+    //        int _rightNeighbourIndex = i + 1;
+    //        int _upNeighbourIndex = i + gridData.columnSize;
+    //        int _downNeighbourIndex = i - gridData.columnSize;
+
+    //        int[] _neighbourIndexes = new int[4] { _leftNeighbourIndex, _rightNeighbourIndex, _upNeighbourIndex, _downNeighbourIndex };
+
+    //        for (int j = 0; j < _neighbourIndexes.Length; j++)
+    //        {
+    //            if (_neighbourIndexes[j] >= 0 && _neighbourIndexes[j] < gridTiles.Count)
+    //            {
+    //                _neighbourTiles.Add(gridTiles[_neighbourIndexes[j]]);
+    //            }
+    //        }
+
+    //        gridTiles[i].SetNeighbours(_neighbourTiles);
+    //    }
+    //}
+
     void HandleNeighboursAttachment()
     {
-        for (int i = 0; i < gridTiles.Count; i++)
+        for (int x = 0; x < gridData.rowSize; x++)
         {
-            List<GridTile> _neighbourTiles = new List<GridTile>(4);
-
-            int _leftNeighbourIndex = i - 1;
-            int _rightNeighbourIndex = i + 1;
-            int _upNeighbourIndex = i + gridData.columnSize;
-            int _downNeighbourIndex = i - gridData.columnSize;
-
-            int[] _neighbourIndexes = new int[4] { _leftNeighbourIndex, _rightNeighbourIndex, _upNeighbourIndex, _downNeighbourIndex };
-
-            for (int j = 0; j < _neighbourIndexes.Length; j++)
+            for (int y = 0; y < gridData.columnSize; y++)
             {
-                if (_neighbourIndexes[j] >= 0 && _neighbourIndexes[j] < gridTiles.Count)
+                List<GridTile> _neighbourTiles = new List<GridTile>(4);
+
+                Vector2Int _leftNeighbourIndex = new Vector2Int(x - 1, y);
+                Vector2Int _rightNeighbourIndex = new Vector2Int(x + 1, y);
+                Vector2Int _upNeighbourIndex = new Vector2Int(x, y + 1);
+                Vector2Int _downNeighbourIndex = new Vector2Int(x, y - 1);
+
+                Vector2Int[] _neighbourIndexes = new Vector2Int[4] { _leftNeighbourIndex, _rightNeighbourIndex, _upNeighbourIndex, _downNeighbourIndex };
+
+                for (int i = 0; i < _neighbourIndexes.Length; i++)
                 {
-                    _neighbourTiles.Add(gridTiles[_neighbourIndexes[j]]);
+                    if ((_neighbourIndexes[i].x >= 0f && _neighbourIndexes[i].x < gridData.rowSize) 
+                        && (_neighbourIndexes[i].y >= 0f && _neighbourIndexes[i].y < gridData.columnSize))
+                    {
+                        _neighbourTiles.Add(gridTiles[_neighbourIndexes[i].x, _neighbourIndexes[i].y]);
+                    }
                 }
+
+                gridTiles[x, y].SetNeighbours(_neighbourTiles);
+            }
+        }
+    }
+
+    void OnGridClicked(object[] a)
+    {
+        GridTile _clickedGridTile = (GridTile)a[0];
+
+        List<GridTile> _matchingNeighbourGridTiles = new();
+
+        if (!CheckMatchable(_clickedGridTile))
+        {
+            return;
+        }
+
+        CheckNeighbours(ref _matchingNeighbourGridTiles, _clickedGridTile);
+
+        for (int i = 0; i < _matchingNeighbourGridTiles.Count; i++)
+        {
+            _matchingNeighbourGridTiles[i].Matched(_clickedGridTile);
+        }
+    }
+
+    bool CheckMatchable(GridTile _gridTile)
+    {
+        bool _isMatching = false;
+
+        for (int i = 0; i < _gridTile.neighbourTiles.Count; i++)
+        {
+            if (_gridTile.neighbourTiles[i].CheckNeighbourTypeMatching(_gridTile.activeMatchItem.matchItemType))
+            {
+                _isMatching = true;
+                break;
+            }
+        }
+
+        return _isMatching;
+    }
+
+    void CheckNeighbours(ref List<GridTile> _matchingNeighbourGridTiles, GridTile _gridTile)
+    {
+        if (!_matchingNeighbourGridTiles.Contains(_gridTile))
+        {
+            _matchingNeighbourGridTiles.Add(_gridTile);
+        }
+
+        for (int i = 0; i < _gridTile.neighbourTiles.Count; i++)
+        {
+            if (_matchingNeighbourGridTiles.Contains(_gridTile.neighbourTiles[i]))
+            {
+                continue;
             }
 
-            gridTiles[i].SetNeighbours(_neighbourTiles);
+            if (!_gridTile.neighbourTiles[i].CheckNeighbourTypeMatching(_gridTile.activeMatchItem.matchItemType))
+            {
+                continue;
+            }
+
+            _matchingNeighbourGridTiles.Add(_gridTile.neighbourTiles[i]);
+
+            CheckNeighbours(ref _matchingNeighbourGridTiles, _gridTile.neighbourTiles[i]);
         }
     }
 

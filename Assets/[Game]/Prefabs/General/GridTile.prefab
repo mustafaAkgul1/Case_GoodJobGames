@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 1247699275251420043}
   - component: {fileID: 466178773143880264}
   - component: {fileID: 6251004463610513440}
-  m_Layer: 0
+  - component: {fileID: 1347466866621303557}
+  m_Layer: 3
   m_Name: GridTile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -46,6 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   activeMatchItem: {fileID: 0}
+  neighbourTiles: []
   rowIndex: 0
 --- !u!114 &6251004463610513440
 MonoBehaviour:
@@ -59,3 +61,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35a9bf777a537564cae147067b8773c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!65 &1347466866621303557
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8288021458553978817}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 2, y: 1.85, z: 1}
+  m_Center: {x: 0, y: -0.17, z: 0}
