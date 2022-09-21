@@ -16,7 +16,6 @@ public class GridManager : Operator
 
     [Space(10)]
     [Header("! Debug !")]
-    //public List<GridTile> gridTiles;
     public GridTile[,] gridTiles;
     MatchItemTypesDataSO matchItemTypesData;
 
@@ -41,7 +40,6 @@ public class GridManager : Operator
 
     void SpawnGrid()
     {
-        //gridTiles = new List<GridTile>(gridData.rowSize * gridData.columnSize);
         gridTiles = new GridTile[gridData.rowSize, gridData.columnSize];
 
         float _gridHalfSize = gridData.gridSize / 2f;
@@ -91,31 +89,6 @@ public class GridManager : Operator
 
         HandleNeighboursAttachment();
     }
-
-    //void HandleNeighboursAttachment()
-    //{
-    //    for (int i = 0; i < gridTiles.Count; i++)
-    //    {
-    //        List<GridTile> _neighbourTiles = new List<GridTile>(4);
-
-    //        int _leftNeighbourIndex = i - 1;
-    //        int _rightNeighbourIndex = i + 1;
-    //        int _upNeighbourIndex = i + gridData.columnSize;
-    //        int _downNeighbourIndex = i - gridData.columnSize;
-
-    //        int[] _neighbourIndexes = new int[4] { _leftNeighbourIndex, _rightNeighbourIndex, _upNeighbourIndex, _downNeighbourIndex };
-
-    //        for (int j = 0; j < _neighbourIndexes.Length; j++)
-    //        {
-    //            if (_neighbourIndexes[j] >= 0 && _neighbourIndexes[j] < gridTiles.Count)
-    //            {
-    //                _neighbourTiles.Add(gridTiles[_neighbourIndexes[j]]);
-    //            }
-    //        }
-
-    //        gridTiles[i].SetNeighbours(_neighbourTiles);
-    //    }
-    //}
 
     void HandleNeighboursAttachment()
     {
