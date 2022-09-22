@@ -20,6 +20,7 @@ public class GridManager : Operator
     GridDataSO gridData;
     MatchItemTypesDataSO matchItemTypesData;
     List<MatchItemTypes> _activeMatchItemTypes;
+    Coroutine emptyGridFinderCor;
     
     #region Enable/Disable
     void OnEnable()
@@ -43,11 +44,11 @@ public class GridManager : Operator
 
     void SpawnGrid()
     {
-        gridTiles = new GridTile[gridData.rowSize, gridData.columnSize];
+        gridTiles = new GridTile[gridData.columnCount, gridData.rowCount];
 
-        float _gridHalfSize = gridData.gridSize / 2f;
+        float _gridHalfSize = gridData.gridTileSize * 0.5f;
 
-        float _columnSpawnOffsetY = ((gridData.gridSize * gridData.rowSize) / 2f) - _gridHalfSize;
+        float _columnSpawnOffsetX = ((gridData.gridTileSize * -gridData.columnCount) * 0.5f) + _gridHalfSize;
 
         #region Handle Randomized Color List
         List<MatchItemTypes> _matchItemTypesCache = new List<MatchItemTypes>(matchItemTypesData.matchItemTypes.Length);
@@ -65,11 +66,11 @@ public class GridManager : Operator
         }
         #endregion
 
-        for (int x = 0; x < gridData.rowSize; x++)
+        for (int x = 0; x < gridData.columnCount; x++)
         {
-            float _columnSpawnOffsetX = ((gridData.gridSize * -gridData.columnSize) / 2f) + _gridHalfSize;
+            float _columnSpawnOffsetY = ((gridData.gridTileSize * -gridData.rowCount) * 0.5f) + _gridHalfSize;
 
-            for (int y = 0; y < gridData.columnSize; y++)
+            for (int y = 0; y < gridData.rowCount; y++)
             {
                 GridTile _gridTile = Instantiate(gridTilePrefab, gridTileHolder);
 
@@ -81,20 +82,20 @@ public class GridManager : Operator
 
                 gridTiles[x, y] = _gridTile;
 
-                _columnSpawnOffsetX += gridData.gridSize;
+                _columnSpawnOffsetY += gridData.gridTileSize;
             }
 
-            _columnSpawnOffsetY -= gridData.gridSize;
+            _columnSpawnOffsetX += gridData.gridTileSize;
         }
 
-        HandleNeighboursAttachment();
+        AttachNeighbours();
     }
 
-    void HandleNeighboursAttachment()
+    void AttachNeighbours()
     {
-        for (int x = 0; x < gridData.rowSize; x++)
+        for (int x = 0; x < gridData.columnCount; x++)
         {
-            for (int y = 0; y < gridData.columnSize; y++)
+            for (int y = 0; y < gridData.rowCount; y++)
             {
                 List<GridTile> _neighbourTiles = new List<GridTile>(4);
 
@@ -107,8 +108,8 @@ public class GridManager : Operator
 
                 for (int i = 0; i < _neighbourIndexes.Length; i++)
                 {
-                    if ((_neighbourIndexes[i].x >= 0f && _neighbourIndexes[i].x < gridData.rowSize) 
-                        && (_neighbourIndexes[i].y >= 0f && _neighbourIndexes[i].y < gridData.columnSize))
+                    if ((_neighbourIndexes[i].x >= 0f && _neighbourIndexes[i].x < gridData.columnCount) 
+                        && (_neighbourIndexes[i].y >= 0f && _neighbourIndexes[i].y < gridData.rowCount))
                     {
                         _neighbourTiles.Add(gridTiles[_neighbourIndexes[i].x, _neighbourIndexes[i].y]);
                     }
@@ -137,7 +138,8 @@ public class GridManager : Operator
             _matchingNeighbourGridTiles[i].Matched(_clickedGridTile);
         }
 
-        HandleFillingEmptyGrids(_matchingNeighbourGridTiles);
+        //HandleFillingEmptyGrids(_matchingNeighbourGridTiles);
+        FillEmptyGrids();
     }
 
     bool CheckMatchable(GridTile _gridTile)
@@ -181,67 +183,150 @@ public class GridManager : Operator
         }
     }
 
-    void HandleFillingEmptyGrids(List<GridTile> _matchedGridTiles)
+    //void HandleFillingEmptyGrids(List<GridTile> _matchedGridTiles)
+    //{
+    //    _matchedGridTiles = _matchedGridTiles.OrderByDescending(x => x.gridIndex.y).ToList();
+
+    //    List<MatchItem> _cachedMatchItems = new List<MatchItem>();
+
+    //    foreach (GridTile _gridTile in _matchedGridTiles)
+    //    {
+    //        int _coordRowCounter = 1;
+
+    //        FetchUpperFilledGridTile(_gridTile, ref _cachedMatchItems, _coordRowCounter);
+    //    }
+    //}
+
+    //void FetchUpperFilledGridTile(GridTile _gridTile, ref List<MatchItem> _cachedMatchItems, int _coordRowCounter)
+    //{
+    //    bool _hasMatchItem = false;
+
+    //    while (_gridTile.gridIndex.y - _coordRowCounter >= 0)
+    //    {
+    //        GridTile _upperGridTile = gridTiles[_gridTile.gridIndex.x, _gridTile.gridIndex.y - _coordRowCounter];
+    //        MatchItem _matchItem = _upperGridTile.activeMatchItem;
+
+    //        if (!_matchItem)
+    //        {
+    //            _coordRowCounter++;
+    //            continue;
+    //        }
+
+    //        if (_cachedMatchItems.Contains(_matchItem))
+    //        {
+    //            _coordRowCounter++;
+    //            continue;
+    //        }
+
+    //        _hasMatchItem = true;
+            
+    //        _matchItem.ChangeGridTile(_gridTile);
+    //        _gridTile.activeMatchItem = _matchItem;
+    //        _upperGridTile.activeMatchItem = null;
+
+    //        _cachedMatchItems.Add(_matchItem);
+
+    //        FetchUpperFilledGridTile(_upperGridTile, ref _cachedMatchItems, 1);
+
+    //        break;
+    //    }
+
+    //    if (_hasMatchItem)
+    //    {
+    //        return;
+    //    }
+
+    //    //Top grids, creates new match items
+    //    int _rndMatchItemTypeIndex1 = Random.Range(0, _activeMatchItemTypes.Count);
+
+    //    MatchItem _matchItem1 = CreateOffGridMatchItem(_gridTile);
+
+    //    _cachedMatchItems.Add(_matchItem1);
+    //}
+
+    void FillEmptyGrids()
     {
-        _matchedGridTiles = _matchedGridTiles.OrderByDescending(x => x.coordIndex.y).ToList();
-
-        List<MatchItem> _cachedMatchItems = new List<MatchItem>();
-
-        foreach (GridTile _gridTile in _matchedGridTiles)
+        if (emptyGridFinderCor != null)
         {
-            int _coordRowCounter = 1;
+            StopCoroutine(emptyGridFinderCor);
+            emptyGridFinderCor = null;
+        }
 
-            FetchUpperFilledGridTile(_gridTile, ref _cachedMatchItems, _coordRowCounter);
+        emptyGridFinderCor = StartCoroutine(FindEmptyGrids());
+    }
+
+    IEnumerator FindEmptyGrids()
+    {
+        for (int x = 0; x < gridData.columnCount; x++)
+        {
+            for (int y = 0; y < gridData.rowCount; y++)
+            {
+                if (!gridTiles[x, y].activeMatchItem)
+                {
+                    yield return StartCoroutine(GridShifting(new Vector2Int(x,y)));
+                    break;
+                }
+            }
         }
     }
 
-    void FetchUpperFilledGridTile(GridTile _gridTile, ref List<MatchItem> _cachedMatchItems, int _coordRowCounter)
+    IEnumerator GridShifting(Vector2Int _gridIndex)
     {
-        bool _hasMatchItem = false;
+        List<GridTile> _columnGridTiles = new();
+        List<GridTile> _emptyGridTiles = new();
 
-        while (_gridTile.coordIndex.x - _coordRowCounter >= 0)
+        //Detecting shiftable grids
+        for (int y = _gridIndex.y; y < gridData.rowCount; y++)
         {
-            GridTile _upperGridTile = gridTiles[_gridTile.coordIndex.x - _coordRowCounter, _gridTile.coordIndex.y];
-            MatchItem _matchItem = _upperGridTile.activeMatchItem;
+            GridTile _gridTile = gridTiles[_gridIndex.x, y];
 
-            if (!_matchItem)
+            if (!_gridTile.activeMatchItem)
             {
-                _coordRowCounter++;
-                continue;
+                _emptyGridTiles.Add(_gridTile);
             }
 
-            if (_cachedMatchItems.Contains(_matchItem))
-            {
-                _coordRowCounter++;
-                continue;
-            }
-
-            _hasMatchItem = true;
-            
-            _matchItem.ChangeGridTile(_gridTile, _gridTile.coordIndex);
-            _gridTile.activeMatchItem = _matchItem;
-            _upperGridTile.activeMatchItem = null;
-
-            _cachedMatchItems.Add(_matchItem);
-
-            FetchUpperFilledGridTile(_upperGridTile, ref _cachedMatchItems, 1);
-
-            break;
+            _columnGridTiles.Add(_gridTile);
         }
 
-        if (_hasMatchItem)
+        //Shifting grids
+        for (int i = 0; i < _emptyGridTiles.Count; i++)
         {
-            return;
+            yield return new WaitForSeconds(0f);
+
+            for (int k = 0; k < _columnGridTiles.Count - 1; k++)
+            {
+                MatchItem _shiftedMatchItem = _columnGridTiles[k + 1].activeMatchItem;
+
+                _shiftedMatchItem?.ChangeGridTile(_columnGridTiles[k]);
+                _columnGridTiles[k].activeMatchItem = _shiftedMatchItem;
+                _columnGridTiles[k + 1].activeMatchItem = null;
+
+                if (!_emptyGridTiles.Contains(_columnGridTiles[k + 1]))
+                {
+                    _emptyGridTiles[i] = _columnGridTiles[k + 1];
+                }
+            }
         }
 
-        //Top grids, creates new match items
-        int _rndMatchItemTypeIndex1 = Random.Range(0, _activeMatchItemTypes.Count);
+        //For ordered spawning of new match items
+        _emptyGridTiles = _emptyGridTiles.OrderBy(x => x.gridIndex.y).ToList();
 
-        MatchItem _matchItem1 = MatchItemPoolManager.Instance.FetchFromPool();
-        _matchItem1.SpawnOffGridTile(_gridTile, _activeMatchItemTypes[_rndMatchItemTypeIndex1], _gridTile.coordIndex);
-        _gridTile.activeMatchItem = _matchItem1;
+        //Filling empty grids
+        for (int i = 0; i < _emptyGridTiles.Count; i++)
+        {
+            CreateOffGridMatchItem(_emptyGridTiles[i], i);
+        }
+    }
 
-        _cachedMatchItems.Add(_matchItem1);
+    MatchItem CreateOffGridMatchItem(GridTile _gridTile, float _spawnOffsetter)
+    {
+        int _rndMatchItemTypeIndex = Random.Range(0, _activeMatchItemTypes.Count);
+
+        MatchItem _matchItem = MatchItemPoolManager.Instance.FetchFromPool();
+        _matchItem.SpawnOffGridTile(_gridTile, _activeMatchItemTypes[_rndMatchItemTypeIndex], _spawnOffsetter);
+        _gridTile.activeMatchItem = _matchItem;
+
+        return _matchItem;
     }
 
 

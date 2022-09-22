@@ -16,15 +16,15 @@ public class GridTile : Operator, IClickable
     [Header("! Debug !")]
     public MatchItem activeMatchItem;
     public List<GridTile> neighbourTiles = new();
-    public Vector2Int coordIndex;
+    public Vector2Int gridIndex;
 
-    public void InitGridTile(Vector3 _localPosition, Vector2Int _coordIndex, MatchItemTypes _matchItemType)
+    public void InitGridTile(Vector3 _localPosition, Vector2Int _gridIndex, MatchItemTypes _matchItemType)
     {
         transform.localPosition = _localPosition;
-        coordIndex = _coordIndex;
+        gridIndex = _gridIndex;
 
         activeMatchItem = MatchItemPoolManager.Instance.FetchFromPool(); 
-        activeMatchItem.SpawnOnGridTile(this, _matchItemType, coordIndex);
+        activeMatchItem.SpawnOnGridTile(this, _matchItemType);
     }
 
     public void SetNeighbours(List<GridTile> _neighbourTiles)

@@ -44,14 +44,14 @@ public class MatchItem : Operator
         matchItemState = MatchItemStates.OnHold;
     }
 
-    public void SpawnOnGridTile(GridTile _gridTile, MatchItemTypes _matchItemType, Vector2Int _coordIndex)
+    public void SpawnOnGridTile(GridTile _gridTile, MatchItemTypes _matchItemType)
     {
         gameObject.SetActive(true);
 
         boundGridTile = _gridTile;
         matchItemType = _matchItemType;
 
-        itemImage.sortingOrder = -_coordIndex.x;
+        itemImage.sortingOrder = boundGridTile.gridIndex.y;
         HandleGroupSprite();
 
         _transform.SetParent(boundGridTile.transform, false);
@@ -65,45 +65,56 @@ public class MatchItem : Operator
         itemImage.sprite = DataManager.Instance.matchItemTypesData.matchItemSprites[matchItemType][0];
     }
 
-    public void SpawnOffGridTile(GridTile _gridTile, MatchItemTypes _matchItemType, Vector2Int _coordIndex)
+    public void SpawnOffGridTile(GridTile _gridTile, MatchItemTypes _matchItemType, float _spawnOffsetter)
     {
         gameObject.SetActive(true);
 
         boundGridTile = _gridTile;
         matchItemType = _matchItemType;
 
-        itemImage.sortingOrder = -_coordIndex.x;
+        itemImage.sortingOrder = boundGridTile.gridIndex.y;
         HandleGroupSprite();
 
-        _transform.SetParent(boundGridTile.transform);
-        _transform.localPosition = Vector3.up * ((((float)_coordIndex.x / DataManager.Instance.gridData.rowSize) * DataManager.Instance.gridData.rowSize) + 3f);
+        _transform.SetParent(boundGridTile.transform, false);
+
+        int _rowCount = DataManager.Instance.gridData.rowCount;
+        int _extraOffsetValue = 3;
+        float _gridTileSize = DataManager.Instance.gridData.gridTileSize;
+        float _gridTileHalfSize = DataManager.Instance.gridData.gridTileSize * 0.5f;
+        float _maxGridYValue = _rowCount * _gridTileHalfSize;
+
+        float _resultOffset = _maxGridYValue + ((_spawnOffsetter + _extraOffsetValue) * _gridTileSize);
+
+        Vector3 _position = _transform.position;
+        _position.y = _resultOffset;
+        _transform.position = _position;
 
         matchItemState = MatchItemStates.ActiveOffGrid;
 
-        TweenToLocalZero(10f, delegate
+        TweenToLocalZero(15f, Ease.Linear, delegate
         {
             matchItemState = MatchItemStates.ActiveOnGrid;
         });
     }
 
-    public void ChangeGridTile(GridTile _gridTile, Vector2Int _coordIndex)
+    public void ChangeGridTile(GridTile _gridTile)
     {
         boundGridTile = _gridTile;
 
-        itemImage.sortingOrder = -_coordIndex.x;
+        itemImage.sortingOrder = boundGridTile.gridIndex.y;
         HandleGroupSprite();
 
         _transform.SetParent(boundGridTile.transform);
 
         matchItemState = MatchItemStates.ActiveOffGrid;
 
-        TweenToLocalZero(10f, delegate
+        TweenToLocalZero(15f, Ease.InBack, delegate
         {
             matchItemState = MatchItemStates.ActiveOnGrid;
         });
     }
 
-    void TweenToLocalZero(float _duration, System.Action _callBack)
+    void TweenToLocalZero(float _duration, Ease _ease, System.Action _callBack)
     {
         if (movingTween != null)
         {
@@ -111,7 +122,7 @@ public class MatchItem : Operator
         }
 
         movingTween = _transform.DOLocalMove(Vector3.zero, _duration)
-            .SetEase(Ease.InBack)
+            .SetEase(_ease)
             .SetLink(gameObject)
             .SetSpeedBased()
             .OnComplete(delegate

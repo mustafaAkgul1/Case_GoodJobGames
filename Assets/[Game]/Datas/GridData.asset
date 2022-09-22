@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7bb7694c6844cb458fda8630c7cccfb, type: 3}
   m_Name: GridData
   m_EditorClassIdentifier: 
-  columnSize: 10
-  rowSize: 10
-  gridSize: 2.2
+  columnCount: 10
+  rowCount: 10
+  gridTileSize: 2.25
   matchItemColorCount: 6
