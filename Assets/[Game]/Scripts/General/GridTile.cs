@@ -109,4 +109,9 @@ public class GridTile : Operator, IClickable
         activeMatchItem.SpawnOffGridTile(this, _matchItemType, _spawnOffsetter);
     }
 
+    public void ChangeMatchItemSprite(Sprite _sprite)
+    {
+        activeMatchItem.ChangeGroupSprite(_sprite);
+    }
+
 } // class

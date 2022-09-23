@@ -52,17 +52,11 @@ public class MatchItem : Operator
         matchItemType = _matchItemType;
 
         itemImage.sortingOrder = boundGridTile.gridIndex.y;
-        HandleGroupSprite();
+        InitGroupSprite();
 
         _transform.SetParent(boundGridTile.transform, false);
 
         matchItemState = MatchItemStates.ActiveOnGrid;
-    }
-
-    void HandleGroupSprite()
-    {
-        //TODO : change this with group sprites
-        itemImage.sprite = DataManager.Instance.matchItemTypesData.matchItemSprites[matchItemType][0];
     }
 
     public void SpawnOffGridTile(GridTile _gridTile, MatchItemTypes _matchItemType, float _spawnOffsetter)
@@ -73,7 +67,7 @@ public class MatchItem : Operator
         matchItemType = _matchItemType;
 
         itemImage.sortingOrder = boundGridTile.gridIndex.y;
-        HandleGroupSprite();
+        InitGroupSprite();
 
         _transform.SetParent(boundGridTile.transform, false);
 
@@ -102,7 +96,7 @@ public class MatchItem : Operator
         boundGridTile = _gridTile;
 
         itemImage.sortingOrder = boundGridTile.gridIndex.y;
-        HandleGroupSprite();
+        InitGroupSprite();
 
         _transform.SetParent(boundGridTile.transform);
 
@@ -112,6 +106,16 @@ public class MatchItem : Operator
         {
             matchItemState = MatchItemStates.ActiveOnGrid;
         });
+    }
+
+    void InitGroupSprite()
+    {
+        itemImage.sprite = DataManager.Instance.matchItemTypesData.matchItemSprites[matchItemType][0];
+    }
+
+    public void ChangeGroupSprite(Sprite _sprite)
+    {
+        itemImage.sprite = _sprite;
     }
 
     void TweenToLocalZero(float _duration, Ease _ease, System.Action _callBack)

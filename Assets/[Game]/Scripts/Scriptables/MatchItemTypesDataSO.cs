@@ -7,5 +7,6 @@ public class MatchItemTypesDataSO : SerializedScriptableObject
 {
     [Header("General Variables")]
     public MatchItemTypes[] matchItemTypes;
+    public int[] matchItemGroupValues;
     public Dictionary<MatchItemTypes, List<Sprite>> matchItemSprites = new();
 }

@@ -22,7 +22,7 @@ public class GridManager : Operator
     MatchItemTypesDataSO matchItemTypesData;
     List<MatchItemTypes> activeMatchItemTypes;
     Coroutine shuffleCheckerCor;
-    
+
     #region Enable/Disable
     void OnEnable()
     {
@@ -41,6 +41,10 @@ public class GridManager : Operator
         matchItemTypesData = DataManager.Instance.matchItemTypesData;
 
         SpawnGrid();
+        AttachNeighbours();
+
+        HandleShuffle();
+        HandleMatchItemGroupSprites();
     }
 
     void SpawnGrid()
@@ -86,10 +90,6 @@ public class GridManager : Operator
 
             _columnSpawnOffsetX += gridData.gridTileSize;
         }
-
-        AttachNeighbours();
-
-        HandleShuffle();
     }
 
     void AttachNeighbours()
@@ -133,6 +133,7 @@ public class GridManager : Operator
         HandleMatching(_clickedGridTile);
         FillEmptyGrids();
         HandleShuffle();
+        HandleMatchItemGroupSprites();
     }
 
     void HandleMatching(GridTile _clickedGridTile)
@@ -314,6 +315,63 @@ public class GridManager : Operator
 
         //Check again for still no more moves situation
         HandleShuffle(1.5f);
+    }
+
+    void HandleMatchItemGroupSprites()
+    {
+        ////Use for delayed sprite change
+        //if (matchItemGroupCheckerCor != null)
+        //{
+        //    StopCoroutine(matchItemGroupCheckerCor);
+        //    matchItemGroupCheckerCor = null;
+        //}
+
+        //matchItemGroupCheckerCor = StartCoroutine(Utils.DelayerCor(1f, delegate
+        //{
+
+        //}));
+
+        List<GridTile> _matchGroupGridTiles = new();
+
+        for (int x = 0; x < gridData.columnCount; x++)
+        {
+            for (int y = 0; y < gridData.rowCount; y++)
+            {
+                FillMatchingDataFromNeighbours(ref _matchGroupGridTiles, gridTiles[x, y]);
+
+                SetMatchItemGroups(_matchGroupGridTiles);
+                _matchGroupGridTiles.Clear();
+            }
+        }
+    }
+
+    void SetMatchItemGroups(List<GridTile> _matchGroupGridTiles)
+    {
+        int _groupSize = _matchGroupGridTiles.Count;
+
+        int _groupsCount = matchItemTypesData.matchItemGroupValues.Length;
+        int _groupIndexer = 0;
+
+        for (int i = 0; i < _groupsCount; i++)
+        {
+            if (_groupSize < matchItemTypesData.matchItemGroupValues[i])
+            {
+                _groupIndexer = i;
+                break;
+            }
+
+            if (i == _groupsCount - 1)
+            {
+                _groupIndexer = _groupsCount;
+                break;
+            }
+        }
+
+        for (int i = 0; i < _groupSize; i++)
+        {
+            GridTile _gridTile = _matchGroupGridTiles[i];
+            _gridTile.ChangeMatchItemSprite(matchItemTypesData.matchItemSprites[_gridTile.activeMatchItem.matchItemType][_groupIndexer]);
+        }
     }
 
     void SpawnTextIndicator(string _message)
