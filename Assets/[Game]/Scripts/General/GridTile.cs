@@ -54,7 +54,23 @@ public class GridTile : Operator, IClickable
         //TODO : tween rotation
     }
 
-    public bool CheckNeighbourTypeMatching(MatchItemTypes _matchItemType)
+    public bool CheckMatchable()
+    {
+        bool _isMatchable = false;
+
+        for (int i = 0; i < neighbourTiles.Count; i++)
+        {
+            if (neighbourTiles[i].CompareMatchItemType(activeMatchItem.matchItemType))
+            {
+                _isMatchable = true;
+                break;
+            }
+        }
+
+        return _isMatchable;
+    }
+
+    public bool CompareMatchItemType(MatchItemTypes _matchItemType)
     {
         return (activeMatchItem && activeMatchItem.matchItemType == _matchItemType);
     }
@@ -65,7 +81,7 @@ public class GridTile : Operator, IClickable
         activeMatchItem = null;
     }
 
-    public void SetActiveMatchItem(MatchItem _matchItem)
+    public void SetActiveMatchItem(MatchItem _matchItem, bool _checkForErrorDebug = true)
     {
         if (_matchItem == null)
         {
@@ -73,7 +89,7 @@ public class GridTile : Operator, IClickable
             return;
         }
 
-        if (activeMatchItem)
+        if (_checkForErrorDebug && activeMatchItem)
         {
             Debug.LogError("WTF, i have already a match item from setter : " + activeMatchItem.matchItemType, gameObject);
         }

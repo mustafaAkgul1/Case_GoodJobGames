@@ -4,6 +4,7 @@ using UnityEngine;
 using DG.Tweening;
 using CLUtils;
 using System.Linq;
+using Sirenix.OdinInspector;
 
 public class GridManager : Operator
 {
@@ -19,8 +20,8 @@ public class GridManager : Operator
     public GridTile[,] gridTiles;
     GridDataSO gridData;
     MatchItemTypesDataSO matchItemTypesData;
-    List<MatchItemTypes> _activeMatchItemTypes;
-    Coroutine emptyGridFinderCor;
+    List<MatchItemTypes> activeMatchItemTypes;
+    Coroutine shuffleCheckerCor;
     
     #region Enable/Disable
     void OnEnable()
@@ -47,20 +48,19 @@ public class GridManager : Operator
         gridTiles = new GridTile[gridData.columnCount, gridData.rowCount];
 
         float _gridHalfSize = gridData.gridTileSize * 0.5f;
-
         float _columnSpawnOffsetX = ((gridData.gridTileSize * -gridData.columnCount) * 0.5f) + _gridHalfSize;
 
         #region Handle Randomized Color List
         List<MatchItemTypes> _matchItemTypesCache = new List<MatchItemTypes>(matchItemTypesData.matchItemTypes.Length);
         _matchItemTypesCache.AddRange(matchItemTypesData.matchItemTypes);
 
-        _activeMatchItemTypes = new List<MatchItemTypes>(gridData.matchItemColorCount);
+        activeMatchItemTypes = new List<MatchItemTypes>(gridData.matchItemColorCount);
 
         for (int i = 0; i < gridData.matchItemColorCount; i++)
         {
             int _rndMatchItemTypeIndex = Random.Range(0, _matchItemTypesCache.Count);
 
-            _activeMatchItemTypes.Add(_matchItemTypesCache[_rndMatchItemTypeIndex]);
+            activeMatchItemTypes.Add(_matchItemTypesCache[_rndMatchItemTypeIndex]);
 
             _matchItemTypesCache.RemoveAt(_rndMatchItemTypeIndex);
         }
@@ -73,12 +73,11 @@ public class GridManager : Operator
             for (int y = 0; y < gridData.rowCount; y++)
             {
                 GridTile _gridTile = Instantiate(gridTilePrefab, gridTileHolder);
-
                 _gridTile.gameObject.name += $"{x}_{y}";
 
                 Vector2 _spawnPoint = new Vector2(_columnSpawnOffsetX, _columnSpawnOffsetY);
-                int _rndMatchItemTypeIndex = Random.Range(0, _activeMatchItemTypes.Count);
-                _gridTile.InitGridTile(_spawnPoint, new Vector2Int(x, y), _activeMatchItemTypes[_rndMatchItemTypeIndex]);
+                int _rndMatchItemTypeIndex = Random.Range(0, activeMatchItemTypes.Count);
+                _gridTile.InitGridTile(_spawnPoint, new Vector2Int(x, y), activeMatchItemTypes[_rndMatchItemTypeIndex]);
 
                 gridTiles[x, y] = _gridTile;
 
@@ -89,6 +88,8 @@ public class GridManager : Operator
         }
 
         AttachNeighbours();
+
+        HandleShuffle();
     }
 
     void AttachNeighbours()
@@ -124,40 +125,29 @@ public class GridManager : Operator
     {
         GridTile _clickedGridTile = (GridTile)a[0];
 
-        List<GridTile> _matchingNeighbourGridTiles = new();
-
-        if (!CheckMatchable(_clickedGridTile))
+        if (!_clickedGridTile.CheckMatchable())
         {
             return;
         }
 
-        CheckNeighbours(ref _matchingNeighbourGridTiles, _clickedGridTile);
+        HandleMatching(_clickedGridTile);
+        FillEmptyGrids();
+        HandleShuffle();
+    }
+
+    void HandleMatching(GridTile _clickedGridTile)
+    {
+        List<GridTile> _matchingNeighbourGridTiles = new();
+
+        FillMatchingDataFromNeighbours(ref _matchingNeighbourGridTiles, _clickedGridTile);
 
         for (int i = 0; i < _matchingNeighbourGridTiles.Count; i++)
         {
             _matchingNeighbourGridTiles[i].Matched(_clickedGridTile);
         }
-
-        FillEmptyGrids();
     }
 
-    bool CheckMatchable(GridTile _gridTile)
-    {
-        bool _isMatching = false;
-
-        for (int i = 0; i < _gridTile.neighbourTiles.Count; i++)
-        {
-            if (_gridTile.neighbourTiles[i].CheckNeighbourTypeMatching(_gridTile.activeMatchItem.matchItemType))
-            {
-                _isMatching = true;
-                break;
-            }
-        }
-
-        return _isMatching;
-    }
-
-    void CheckNeighbours(ref List<GridTile> _matchingNeighbourGridTiles, GridTile _gridTile)
+    void FillMatchingDataFromNeighbours(ref List<GridTile> _matchingNeighbourGridTiles, GridTile _gridTile)
     {
         if (!_matchingNeighbourGridTiles.Contains(_gridTile))
         {
@@ -171,14 +161,14 @@ public class GridManager : Operator
                 continue;
             }
 
-            if (!_gridTile.neighbourTiles[i].CheckNeighbourTypeMatching(_gridTile.activeMatchItem.matchItemType))
+            if (!_gridTile.neighbourTiles[i].CompareMatchItemType(_gridTile.activeMatchItem.matchItemType))
             {
                 continue;
             }
 
             _matchingNeighbourGridTiles.Add(_gridTile.neighbourTiles[i]);
 
-            CheckNeighbours(ref _matchingNeighbourGridTiles, _gridTile.neighbourTiles[i]);
+            FillMatchingDataFromNeighbours(ref _matchingNeighbourGridTiles, _gridTile.neighbourTiles[i]);
         }
     }
 
@@ -251,13 +241,115 @@ public class GridManager : Operator
 
     MatchItem CreateOffGridMatchItem(GridTile _gridTile, float _spawnOffsetter)
     {
-        int _rndMatchItemTypeIndex = Random.Range(0, _activeMatchItemTypes.Count);
+        int _rndMatchItemTypeIndex = Random.Range(0, activeMatchItemTypes.Count);
 
         MatchItem _matchItem = MatchItemPoolManager.Instance.FetchFromPool();
-        _gridTile.SpawnActiveMatchItem(_matchItem, _activeMatchItemTypes[_rndMatchItemTypeIndex], _spawnOffsetter);
+        _gridTile.SpawnActiveMatchItem(_matchItem, activeMatchItemTypes[_rndMatchItemTypeIndex], _spawnOffsetter);
 
         return _matchItem;
     }
 
+    void HandleShuffle(float _shuffleCheckDelay = 2f)
+    {
+        if (shuffleCheckerCor != null)
+        {
+            StopCoroutine(shuffleCheckerCor);
+            shuffleCheckerCor = null;
+        }
+
+        shuffleCheckerCor = StartCoroutine(Utils.DelayerCor(_shuffleCheckDelay, delegate
+        {
+            CheckForShuffle();
+        }));
+    }
+
+    void CheckForShuffle()
+    {
+        List<GridTile> _matchingNeighbourGridTiles = new();
+        List<MatchItem> _matchItems = new List<MatchItem>(gridData.columnCount * gridData.rowCount);
+
+        int _counter = 0;
+        for (int x = 0; x < gridData.columnCount; x++)
+        {
+            for (int y = 0; y < gridData.rowCount; y++)
+            {
+                _matchItems.Add(gridTiles[x, y].activeMatchItem);
+
+                if (_matchingNeighbourGridTiles.Count > _counter)
+                    continue;
+
+                FillMatchingDataFromNeighbours(ref _matchingNeighbourGridTiles, gridTiles[x, y]);
+                _counter++;
+            }
+        }
+
+        // Check there is a matchable tile to click
+        if (_matchingNeighbourGridTiles.Count < (gridData.columnCount * gridData.rowCount))
+        {
+            //Debug.Log("There is a matchable tile to click, continue without shuffle");
+            _matchingNeighbourGridTiles.Clear();
+            _matchItems.Clear();
+            return;
+        }
+
+        ShuffleMatchItems(_matchItems);
+    }
+
+    void ShuffleMatchItems(List<MatchItem> _matchItems)
+    {
+        SpawnTextIndicator("Shuffling");
+
+        System.Random _rnd = new System.Random();
+        _matchItems = _matchItems.OrderBy(_item => _rnd.Next()).ToList();
+
+        int _indexer = 0;
+        for (int x = 0; x < gridData.columnCount; x++)
+        {
+            for (int y = 0; y < gridData.rowCount; y++)
+            {
+                gridTiles[x, y].SetActiveMatchItem(_matchItems[_indexer], false);
+                _indexer++;
+            }
+        }
+
+        //Check again for still no more moves situation
+        HandleShuffle(1.5f);
+    }
+
+    void SpawnTextIndicator(string _message)
+    {
+        TextIndicator _textIndicator = TextIndicatorPoolManager.Instance.FetchFromPool();
+
+        Vector3 _localPosition = gridTiles[0, gridData.rowCount - 1].transform.position + (Vector3.up * gridData.gridTileSize * 2f);
+        _localPosition.x = 0f;
+
+        _textIndicator.SpawnIndicator(_message, transform, _localPosition, TextIndicatorTypes.Normal);
+    }
+
+    void SpawnTextIndicator(string _message, GridTile _gridTile)
+    {
+        TextIndicator _textIndicator = TextIndicatorPoolManager.Instance.FetchFromPool();
+
+        Vector3 _localPosition = _gridTile.transform.position + (Vector3.up * gridData.gridTileSize * 0.5f);
+        _localPosition.x = 0f;
+
+        _textIndicator.SpawnIndicator(_message, transform, _localPosition, TextIndicatorTypes.Normal);
+    }
+
+    [Button]
+    public void DebugShuffling() // For debug purposes
+    {
+        List<MatchItem> _matchItems = new List<MatchItem>(gridData.columnCount * gridData.rowCount);
+
+        for (int x = 0; x < gridData.columnCount; x++)
+        {
+            for (int y = 0; y < gridData.rowCount; y++)
+            {
+                _matchItems.Add(gridTiles[x, y].activeMatchItem);
+            }
+        }
+
+        ShuffleMatchItems(_matchItems);
+    }
 
 } // class

@@ -92,14 +92,14 @@ namespace CLUtils
             switch (_textIndicatorType)
             {
                 case TextIndicatorTypes.Normal:
+                case TextIndicatorTypes.Alert:
+                    valueText.text = _value;
+                    break;
                 case TextIndicatorTypes.Positive:
                     valueText.text = "+" + _value;
                     break;
                 case TextIndicatorTypes.Negative:
                     valueText.text = "-" + _value;
-                    break;
-                case TextIndicatorTypes.Alert:
-                    valueText.text = _value;
                     break;
                 default:
                     break;
