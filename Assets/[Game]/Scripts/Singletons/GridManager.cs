@@ -138,7 +138,6 @@ public class GridManager : Operator
             _matchingNeighbourGridTiles[i].Matched(_clickedGridTile);
         }
 
-        //HandleFillingEmptyGrids(_matchingNeighbourGridTiles);
         FillEmptyGrids();
     }
 
@@ -183,79 +182,7 @@ public class GridManager : Operator
         }
     }
 
-    //void HandleFillingEmptyGrids(List<GridTile> _matchedGridTiles)
-    //{
-    //    _matchedGridTiles = _matchedGridTiles.OrderByDescending(x => x.gridIndex.y).ToList();
-
-    //    List<MatchItem> _cachedMatchItems = new List<MatchItem>();
-
-    //    foreach (GridTile _gridTile in _matchedGridTiles)
-    //    {
-    //        int _coordRowCounter = 1;
-
-    //        FetchUpperFilledGridTile(_gridTile, ref _cachedMatchItems, _coordRowCounter);
-    //    }
-    //}
-
-    //void FetchUpperFilledGridTile(GridTile _gridTile, ref List<MatchItem> _cachedMatchItems, int _coordRowCounter)
-    //{
-    //    bool _hasMatchItem = false;
-
-    //    while (_gridTile.gridIndex.y - _coordRowCounter >= 0)
-    //    {
-    //        GridTile _upperGridTile = gridTiles[_gridTile.gridIndex.x, _gridTile.gridIndex.y - _coordRowCounter];
-    //        MatchItem _matchItem = _upperGridTile.activeMatchItem;
-
-    //        if (!_matchItem)
-    //        {
-    //            _coordRowCounter++;
-    //            continue;
-    //        }
-
-    //        if (_cachedMatchItems.Contains(_matchItem))
-    //        {
-    //            _coordRowCounter++;
-    //            continue;
-    //        }
-
-    //        _hasMatchItem = true;
-            
-    //        _matchItem.ChangeGridTile(_gridTile);
-    //        _gridTile.activeMatchItem = _matchItem;
-    //        _upperGridTile.activeMatchItem = null;
-
-    //        _cachedMatchItems.Add(_matchItem);
-
-    //        FetchUpperFilledGridTile(_upperGridTile, ref _cachedMatchItems, 1);
-
-    //        break;
-    //    }
-
-    //    if (_hasMatchItem)
-    //    {
-    //        return;
-    //    }
-
-    //    //Top grids, creates new match items
-    //    int _rndMatchItemTypeIndex1 = Random.Range(0, _activeMatchItemTypes.Count);
-
-    //    MatchItem _matchItem1 = CreateOffGridMatchItem(_gridTile);
-
-    //    _cachedMatchItems.Add(_matchItem1);
-    //}
-
     void FillEmptyGrids()
-    {
-        if (emptyGridFinderCor != null)
-        {
-            StopCoroutine(emptyGridFinderCor);
-            emptyGridFinderCor = null;
-        }
-
-        emptyGridFinderCor = StartCoroutine(FindEmptyGrids());
-    }
-
-    IEnumerator FindEmptyGrids()
     {
         for (int x = 0; x < gridData.columnCount; x++)
         {
@@ -263,14 +190,14 @@ public class GridManager : Operator
             {
                 if (!gridTiles[x, y].activeMatchItem)
                 {
-                    yield return StartCoroutine(GridShifting(new Vector2Int(x,y)));
+                    GridShifting(new Vector2Int(x, y));
                     break;
                 }
             }
         }
     }
 
-    IEnumerator GridShifting(Vector2Int _gridIndex)
+    void GridShifting(Vector2Int _gridIndex)
     {
         List<GridTile> _columnGridTiles = new();
         List<GridTile> _emptyGridTiles = new();
@@ -291,19 +218,23 @@ public class GridManager : Operator
         //Shifting grids
         for (int i = 0; i < _emptyGridTiles.Count; i++)
         {
-            yield return new WaitForSeconds(0f);
-
             for (int k = 0; k < _columnGridTiles.Count - 1; k++)
             {
-                MatchItem _shiftedMatchItem = _columnGridTiles[k + 1].activeMatchItem;
-
-                _shiftedMatchItem?.ChangeGridTile(_columnGridTiles[k]);
-                _columnGridTiles[k].activeMatchItem = _shiftedMatchItem;
-                _columnGridTiles[k + 1].activeMatchItem = null;
-
-                if (!_emptyGridTiles.Contains(_columnGridTiles[k + 1]))
+                GridTile _currGridTile = _columnGridTiles[k];
+                GridTile _upperGridTile = _columnGridTiles[k + 1];
+                MatchItem _currMatchItem = _currGridTile.activeMatchItem;
+                MatchItem _upperMatchItem = _upperGridTile.activeMatchItem;
+                
+                // For prevent data loss on spiral matching
+                if (!_currMatchItem)
                 {
-                    _emptyGridTiles[i] = _columnGridTiles[k + 1];
+                    _upperGridTile.SetActiveMatchItem(null);
+                    _currGridTile.SetActiveMatchItem(_upperMatchItem);
+                }
+
+                if (!_emptyGridTiles.Contains(_upperGridTile))
+                {
+                    _emptyGridTiles[i] = _upperGridTile;
                 }
             }
         }
@@ -323,8 +254,7 @@ public class GridManager : Operator
         int _rndMatchItemTypeIndex = Random.Range(0, _activeMatchItemTypes.Count);
 
         MatchItem _matchItem = MatchItemPoolManager.Instance.FetchFromPool();
-        _matchItem.SpawnOffGridTile(_gridTile, _activeMatchItemTypes[_rndMatchItemTypeIndex], _spawnOffsetter);
-        _gridTile.activeMatchItem = _matchItem;
+        _gridTile.SpawnActiveMatchItem(_matchItem, _activeMatchItemTypes[_rndMatchItemTypeIndex], _spawnOffsetter);
 
         return _matchItem;
     }

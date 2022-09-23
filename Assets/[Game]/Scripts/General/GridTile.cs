@@ -65,4 +65,32 @@ public class GridTile : Operator, IClickable
         activeMatchItem = null;
     }
 
+    public void SetActiveMatchItem(MatchItem _matchItem)
+    {
+        if (_matchItem == null)
+        {
+            activeMatchItem = null;
+            return;
+        }
+
+        if (activeMatchItem)
+        {
+            Debug.LogError("WTF, i have already a match item from setter : " + activeMatchItem.matchItemType, gameObject);
+        }
+
+        activeMatchItem = _matchItem;
+        activeMatchItem.ChangeGridTile(this);
+    }
+
+    public void SpawnActiveMatchItem(MatchItem _matchItem, MatchItemTypes _matchItemType, float _spawnOffsetter)
+    {
+        if (activeMatchItem)
+        {
+            Debug.LogWarning("WTF, i have already a match item from off grid spawn : " + activeMatchItem.matchItemType);
+        }
+
+        activeMatchItem = _matchItem;
+        activeMatchItem.SpawnOffGridTile(this, _matchItemType, _spawnOffsetter);
+    }
+
 } // class
