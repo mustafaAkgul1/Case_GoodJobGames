@@ -253,10 +253,7 @@ public class GridManager : Operator
             shuffleCheckerCor = null;
         }
 
-        shuffleCheckerCor = StartCoroutine(Utils.DelayerCor(_shuffleCheckDelay, delegate
-        {
-            CheckForShuffle();
-        }));
+        shuffleCheckerCor = StartCoroutine(Utils.DelayerCor(_shuffleCheckDelay, CheckForShuffle));
     }
 
     void CheckForShuffle()
@@ -303,7 +300,7 @@ public class GridManager : Operator
         {
             for (int y = 0; y < gridData.rowCount; y++)
             {
-                gridTiles[x, y].SetActiveMatchItem(_matchItems[_indexer], false);
+                gridTiles[x, y].SetActiveMatchItem(_matchItems[_indexer]);
                 _indexer++;
             }
         }
@@ -368,20 +365,10 @@ public class GridManager : Operator
     {
         TextIndicator _textIndicator = TextIndicatorPoolManager.Instance.FetchFromPool();
 
-        Vector3 _localPosition = gridTiles[0, gridData.rowCount - 1].transform.position + (Vector3.up * gridData.gridTileSize * 2f);
+        Vector3 _localPosition = gridTiles[0, gridData.rowCount - 1].transform.position + (gridData.gridTileSize * 2f * Vector3.up);
         _localPosition.x = 0f;
 
-        _textIndicator.SpawnIndicator(_message, transform, _localPosition, TextIndicatorTypes.Normal);
-    }
-
-    void SpawnTextIndicator(string _message, GridTile _gridTile)
-    {
-        TextIndicator _textIndicator = TextIndicatorPoolManager.Instance.FetchFromPool();
-
-        Vector3 _localPosition = _gridTile.transform.position + (Vector3.up * gridData.gridTileSize * 0.5f);
-        _localPosition.x = 0f;
-
-        _textIndicator.SpawnIndicator(_message, transform, _localPosition, TextIndicatorTypes.Normal);
+        _textIndicator.SpawnFromPool(_message, transform, _localPosition, TextIndicatorTypes.Normal, false, false);
     }
 
     [Button]

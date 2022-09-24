@@ -2,7 +2,7 @@ using UnityEngine;
 using DG.Tweening;
 using CLUtils;
 
-public class MatchItem : Operator
+public class MatchItem : Operator, IPoolable
 {
     [Header("References")]
     [SerializeField] SpriteRenderer itemImage;
@@ -10,22 +10,13 @@ public class MatchItem : Operator
 
     [Space(10)]
     [Header("! Debug !")]
-    public MatchItemTypes matchItemType;
-    [SerializeField] MatchItemStates matchItemState;
-    [SerializeField] GridTile boundGridTile;
+    [HideInInspector] public MatchItemTypes matchItemType;
+    GridTile boundGridTile;
     Transform poolHolder;
     Tween movingTween;
     Transform _transform;
     FeelingDataSO matchingData;
     ParticleSystem.TextureSheetAnimationModule destroyVFXTextureModule;
-
-    public enum MatchItemStates
-    {
-        OnHold,
-        ActiveOnGrid,
-        ActiveOffGrid,
-        Disabling
-    }
 
     void Awake()
     {
@@ -41,13 +32,14 @@ public class MatchItem : Operator
         poolHolder = _poolHolder;
         _transform.SetParent(poolHolder, false);
 
-        matchItemState = MatchItemStates.OnHold;
-
         itemImage.enabled = true;
     }
 
-    public void SpawnOnGridTile(GridTile _gridTile, MatchItemTypes _matchItemType)
+    public void SpawnFromPool(params object[] _args)
     {
+        GridTile _gridTile = (GridTile) _args[0];
+        MatchItemTypes _matchItemType = (MatchItemTypes) _args[1];
+
         gameObject.SetActive(true);
 
         boundGridTile = _gridTile;
@@ -57,8 +49,6 @@ public class MatchItem : Operator
         InitGroupSprite();
 
         _transform.SetParent(boundGridTile.transform, false);
-
-        matchItemState = MatchItemStates.ActiveOnGrid;
     }
 
     public void SpawnOffGridTile(GridTile _gridTile, MatchItemTypes _matchItemType, float _spawnOffsetter)
@@ -81,12 +71,7 @@ public class MatchItem : Operator
         _position.y = _resultOffset;
         _transform.position = _position;
 
-        matchItemState = MatchItemStates.ActiveOffGrid;
-
-        TweenToLocalZero(matchingData.offGridMatchItemFallSpeed, matchingData.offGridMatchItemFallEase, delegate
-        {
-            matchItemState = MatchItemStates.ActiveOnGrid;
-        });
+        TweenToLocalZero(matchingData.offGridMatchItemFallSpeed, matchingData.offGridMatchItemFallEase);
     }
 
     public void ChangeGridTile(GridTile _gridTile)
@@ -98,12 +83,7 @@ public class MatchItem : Operator
 
         _transform.SetParent(boundGridTile.transform);
 
-        matchItemState = MatchItemStates.ActiveOffGrid;
-
-        TweenToLocalZero(matchingData.onGridMatchItemFallSpeed, matchingData.onGridMatchItemFallEase, delegate
-        {
-            matchItemState = MatchItemStates.ActiveOnGrid;
-        });
+        TweenToLocalZero(matchingData.onGridMatchItemFallSpeed, matchingData.onGridMatchItemFallEase);
     }
 
     void InitGroupSprite()
@@ -129,21 +109,15 @@ public class MatchItem : Operator
         }));
     }
 
-    void TweenToLocalZero(float _duration, AnimationCurve _ease, System.Action _callBack)
+    void TweenToLocalZero(float _duration, AnimationCurve _ease)
     {
-        if (movingTween != null)
-        {
-            movingTween.Kill();
-        }
+        movingTween.Kill();
 
         movingTween = _transform.DOLocalMove(Vector3.zero, _duration)
             .SetEase(_ease)
             .SetLink(gameObject)
             .SetSpeedBased()
-            .OnComplete(delegate
-            {
-                _callBack?.Invoke();
-            });
+            ;
     }
 
 } // class

@@ -15,3 +15,11 @@ public enum MatchItemGroupTypes
     MediumGroup,
     HighGroup
 }
+
+public enum TextIndicatorTypes
+{
+    Normal,
+    Positive,
+    Negative,
+    Alert
+}

@@ -12,7 +12,7 @@ namespace CLUtils
         [Header("General Variables")]
         [SerializeField] Color gizmosColor = Color.blue;
         [SerializeField] float range = 0.5f;
-        [SerializeField] bool isWired = false;
+        [SerializeField] bool isWired;
 
         void OnDrawGizmos()
         {

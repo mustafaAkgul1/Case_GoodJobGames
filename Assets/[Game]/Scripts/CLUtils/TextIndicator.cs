@@ -7,17 +7,9 @@ using UnityEngine;
 using TMPro;
 using DG.Tweening;
 
-public enum TextIndicatorTypes
-{
-    Normal,
-    Positive,
-    Negative,
-    Alert
-}
-
 namespace CLUtils
 {
-    public class TextIndicator : MonoBehaviour
+    public class TextIndicator : MonoBehaviour, IPoolable
     {
         [Header("General Variables")]
         [SerializeField] float upwardSpeed;
@@ -75,19 +67,22 @@ namespace CLUtils
             valueText.text = "99";
         }
 
-        public void SpawnIndicator(string _value, Transform _parent, Vector3 _localPosition, TextIndicatorTypes _textIndicatorType, bool _followParent = false, bool _useRandomizedPosition = false, bool _lookAtCamera = false)
+        public void SpawnFromPool(params object[] _args)
         {
+            string _value = (string)_args[0];
+            Transform _parent = (Transform)_args[1];
+            Vector3 _localPosition = (Vector3)_args[2];
+            TextIndicatorTypes _textIndicatorType = (TextIndicatorTypes)_args[3];
+            bool _useRandomizedPosition = (bool)_args[4];
+            bool _lookAtCamera = (bool)_args[5];
+
             gameObject.SetActive(true);
             activationState = ActivationStates.Active;
 
             _transform.SetParent(_parent);
             _transform.localPosition = _useRandomizedPosition ? _localPosition + (Random.insideUnitSphere * Random.Range(-1f, 1f)) : _localPosition;
             _transform.forward = _lookAtCamera ? camTransform.forward : Vector3.forward;
-
-            if (!_followParent)
-            {
-                _transform.SetParent(poolHolder);
-            }
+            _transform.SetParent(poolHolder);
 
             switch (_textIndicatorType)
             {
