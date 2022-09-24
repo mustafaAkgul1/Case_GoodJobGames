@@ -2,8 +2,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 using CLUtils;
+using UnityEngine.EventSystems;
 
-public class GridTile : Operator, IClickable
+public class GridTile : Operator, IPointerClickHandler
 {
     [Header("! Debug !")]
     [HideInInspector] public MatchItem activeMatchItem;
@@ -33,12 +34,12 @@ public class GridTile : Operator, IClickable
         neighbourTiles = _neighbourTiles;
     }
 
-    //void OnMouseDown() // Another option to handle click
-    //{
-    //    Clicked();
-    //}
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        Clicked();
+    }
 
-    public void Clicked()
+    void Clicked()
     {
         if (!activeMatchItem)
         {
@@ -128,5 +129,6 @@ public class GridTile : Operator, IClickable
         _transform.localEulerAngles = Vector3.zero;
         _transform.localScale = Vector3.one;
     }
+    
 
 } // class
