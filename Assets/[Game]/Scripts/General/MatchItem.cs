@@ -129,7 +129,7 @@ public class MatchItem : Operator
         }));
     }
 
-    void TweenToLocalZero(float _duration, Ease _ease, System.Action _callBack)
+    void TweenToLocalZero(float _duration, AnimationCurve _ease, System.Action _callBack)
     {
         if (movingTween != null)
         {

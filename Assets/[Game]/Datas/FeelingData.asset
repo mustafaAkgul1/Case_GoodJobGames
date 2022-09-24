@@ -12,11 +12,102 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 467618f8881688f4488daae74d0a985a, type: 3}
   m_Name: FeelingData
   m_EditorClassIdentifier: 
-  offGridMatchItemSpawnOffset: 3
-  offGridMatchItemFallSpeed: 15
-  onGridMatchItemFallSpeed: 15
-  offGridMatchItemFallEase: 1
-  onGridMatchItemFallEase: 26
+  offGridMatchItemSpawnOffset: 7
+  offGridMatchItemFallSpeed: 24
+  onGridMatchItemFallSpeed: 17
+  offGridMatchItemFallEase:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.0045029535
+      outSlope: 0.0045029535
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.632933
+    - serializedVersion: 3
+      time: 0.5670468
+      value: 0.5033419
+      inSlope: 1.7941281
+      outSlope: 1.7941281
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.10354259
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.7032209
+      value: 0.83885664
+      inSlope: 1.8789132
+      outSlope: 1.8789132
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.04940821
+      outWeight: 0.38260016
+    - serializedVersion: 3
+      time: 0.80238205
+      value: 1.004148
+      inSlope: 0.778363
+      outSlope: 0.778363
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.65325963
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.94693655
+      value: 0.98981607
+      inSlope: -0.003524428
+      outSlope: -0.003524428
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 1
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1.0023575
+      inSlope: 0.017377086
+      outSlope: 0.017377086
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 1
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  onGridMatchItemFallEase:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.49898267
+      value: -0.007676497
+      inSlope: 1.0565834
+      outSlope: 1.0565834
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 3.9133906
+      outSlope: 3.9133906
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.116429776
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   gridBubbleRotationDuration: 0.4
   gridBubbleScaleDuration: 0.4
   gridBubbleRotationFactor: 12

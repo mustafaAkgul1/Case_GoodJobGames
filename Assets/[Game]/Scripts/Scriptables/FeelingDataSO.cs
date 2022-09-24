@@ -10,8 +10,8 @@ public class FeelingDataSO : ScriptableObject
     [Header("Grid Falling Variables")]
     [Range(1f, 50f)] public float offGridMatchItemFallSpeed = 15f;
     [Range(1f, 50f)] public float onGridMatchItemFallSpeed = 15f;
-    public Ease offGridMatchItemFallEase;
-    public Ease onGridMatchItemFallEase;
+    public AnimationCurve offGridMatchItemFallEase;
+    public AnimationCurve onGridMatchItemFallEase;
 
     [Header("Grid Bubble Variables")]
     [Range(0.1f, 2f)] public float gridBubbleRotationDuration = 0.4f;

@@ -16,3 +16,5 @@ MonoBehaviour:
   columnCount: 10
   rowCount: 10
   gridTileSize: 2.25
+  shuffleGeneralDelay: 2
+  shuffleInnerDelay: 1.5
