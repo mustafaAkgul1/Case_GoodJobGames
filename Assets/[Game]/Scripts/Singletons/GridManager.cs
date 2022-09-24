@@ -1,23 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using DG.Tweening;
 using CLUtils;
 using System.Linq;
 using Sirenix.OdinInspector;
 
 public class GridManager : Operator
 {
-    [Header("General Variables")]
-    int testInt2;
-
     [Header("References")]
     public GridTile gridTilePrefab;
     public Transform gridTileHolder;
 
     [Space(10)]
     [Header("! Debug !")]
-    public GridTile[,] gridTiles;
+    GridTile[,] gridTiles;
     GridDataSO gridData;
     MatchItemTypesDataSO matchItemTypesData;
     List<MatchItemTypes> activeMatchItemTypes;
@@ -40,21 +36,16 @@ public class GridManager : Operator
         gridData = DataManager.Instance.gridData;
         matchItemTypesData = DataManager.Instance.matchItemTypesData;
 
+        InitRandomMatchItemTypeList();
         SpawnGrid();
         AttachNeighbours();
 
-        HandleShuffle();
+        HandleShuffle(gridData.shuffleGeneralDelay);
         HandleMatchItemGroupSprites();
     }
 
-    void SpawnGrid()
+    void InitRandomMatchItemTypeList()
     {
-        gridTiles = new GridTile[gridData.columnCount, gridData.rowCount];
-
-        float _gridHalfSize = gridData.gridTileSize * 0.5f;
-        float _columnSpawnOffsetX = ((gridData.gridTileSize * -gridData.columnCount) * 0.5f) + _gridHalfSize;
-
-        #region Handle Randomized Color List
         List<MatchItemTypes> _matchItemTypesCache = new List<MatchItemTypes>(matchItemTypesData.matchItemTypes.Length);
         _matchItemTypesCache.AddRange(matchItemTypesData.matchItemTypes);
 
@@ -68,7 +59,14 @@ public class GridManager : Operator
 
             _matchItemTypesCache.RemoveAt(_rndMatchItemTypeIndex);
         }
-        #endregion
+    }
+
+    void SpawnGrid()
+    {
+        gridTiles = new GridTile[gridData.columnCount, gridData.rowCount];
+
+        float _gridHalfSize = gridData.gridTileSize * 0.5f;
+        float _columnSpawnOffsetX = ((gridData.gridTileSize * -gridData.columnCount) * 0.5f) + _gridHalfSize;
 
         for (int x = 0; x < gridData.columnCount; x++)
         {
@@ -80,8 +78,7 @@ public class GridManager : Operator
                 _gridTile.gameObject.name += $"{x}_{y}";
 
                 Vector2 _spawnPoint = new Vector2(_columnSpawnOffsetX, _columnSpawnOffsetY);
-                int _rndMatchItemTypeIndex = Random.Range(0, activeMatchItemTypes.Count);
-                _gridTile.InitGridTile(_spawnPoint, new Vector2Int(x, y), activeMatchItemTypes[_rndMatchItemTypeIndex]);
+                _gridTile.InitGridTile(_spawnPoint, new Vector2Int(x, y), GetRandomMatchItemType());
 
                 gridTiles[x, y] = _gridTile;
 
@@ -132,7 +129,7 @@ public class GridManager : Operator
 
         HandleMatching(_clickedGridTile);
         FillEmptyGrids();
-        HandleShuffle();
+        HandleShuffle(gridData.shuffleGeneralDelay);
         HandleMatchItemGroupSprites();
     }
 
@@ -242,15 +239,13 @@ public class GridManager : Operator
 
     MatchItem CreateOffGridMatchItem(GridTile _gridTile, float _spawnOffsetter)
     {
-        int _rndMatchItemTypeIndex = Random.Range(0, activeMatchItemTypes.Count);
-
         MatchItem _matchItem = MatchItemPoolManager.Instance.FetchFromPool();
-        _gridTile.SpawnActiveMatchItem(_matchItem, activeMatchItemTypes[_rndMatchItemTypeIndex], _spawnOffsetter);
+        _gridTile.SpawnActiveMatchItem(_matchItem, GetRandomMatchItemType(), _spawnOffsetter);
 
         return _matchItem;
     }
 
-    void HandleShuffle(float _shuffleCheckDelay = 2f)
+    void HandleShuffle(float _shuffleCheckDelay)
     {
         if (shuffleCheckerCor != null)
         {
@@ -314,23 +309,11 @@ public class GridManager : Operator
         }
 
         //Check again for still no more moves situation
-        HandleShuffle(1.5f);
+        HandleShuffle(gridData.shuffleInnerDelay);
     }
 
     void HandleMatchItemGroupSprites()
     {
-        ////Use for delayed sprite change
-        //if (matchItemGroupCheckerCor != null)
-        //{
-        //    StopCoroutine(matchItemGroupCheckerCor);
-        //    matchItemGroupCheckerCor = null;
-        //}
-
-        //matchItemGroupCheckerCor = StartCoroutine(Utils.DelayerCor(1f, delegate
-        //{
-
-        //}));
-
         List<GridTile> _matchGroupGridTiles = new();
 
         for (int x = 0; x < gridData.columnCount; x++)
@@ -372,6 +355,13 @@ public class GridManager : Operator
             GridTile _gridTile = _matchGroupGridTiles[i];
             _gridTile.ChangeMatchItemSprite(matchItemTypesData.matchItemSprites[_gridTile.activeMatchItem.matchItemType][_groupIndexer]);
         }
+    }
+
+    MatchItemTypes GetRandomMatchItemType()
+    {
+        int _rndMatchItemTypeIndex = Random.Range(0, activeMatchItemTypes.Count);
+
+        return activeMatchItemTypes[_rndMatchItemTypeIndex];
     }
 
     void SpawnTextIndicator(string _message)

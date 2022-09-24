@@ -1,14 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 using CLUtils;
 
 public class MatchItem : Operator
 {
-    [Header("General Variables")]
-    int testInt2;
-
     [Header("References")]
     public SpriteRenderer itemImage;
 
@@ -20,6 +15,7 @@ public class MatchItem : Operator
     Transform poolHolder;
     Tween movingTween;
     Transform _transform;
+    MatchingDataSO matchingData;
 
     public enum MatchItemStates
     {
@@ -32,6 +28,7 @@ public class MatchItem : Operator
     void Awake()
     {
         _transform = transform;
+        matchingData = DataManager.Instance.matchingData;
     }
 
     public void DisableFromPool(Transform _poolHolder)
@@ -71,13 +68,9 @@ public class MatchItem : Operator
 
         _transform.SetParent(boundGridTile.transform, false);
 
-        int _rowCount = DataManager.Instance.gridData.rowCount;
-        int _extraOffsetValue = 3;
         float _gridTileSize = DataManager.Instance.gridData.gridTileSize;
-        float _gridTileHalfSize = DataManager.Instance.gridData.gridTileSize * 0.5f;
-        float _maxGridYValue = _rowCount * _gridTileHalfSize;
-
-        float _resultOffset = _maxGridYValue + ((_spawnOffsetter + _extraOffsetValue) * _gridTileSize);
+        float _maxGridYValue = DataManager.Instance.gridData.rowCount * (_gridTileSize * 0.5f);
+        float _resultOffset = _maxGridYValue + ((_spawnOffsetter + matchingData.offGridMatchItemSpawnOffset) * _gridTileSize);
 
         Vector3 _position = _transform.position;
         _position.y = _resultOffset;
@@ -85,7 +78,7 @@ public class MatchItem : Operator
 
         matchItemState = MatchItemStates.ActiveOffGrid;
 
-        TweenToLocalZero(15f, Ease.Linear, delegate
+        TweenToLocalZero(matchingData.offGridMatchItemFallSpeed, matchingData.offGridMatchItemFallEase, delegate
         {
             matchItemState = MatchItemStates.ActiveOnGrid;
         });
@@ -102,7 +95,7 @@ public class MatchItem : Operator
 
         matchItemState = MatchItemStates.ActiveOffGrid;
 
-        TweenToLocalZero(15f, Ease.InBack, delegate
+        TweenToLocalZero(matchingData.onGridMatchItemFallSpeed, matchingData.onGridMatchItemFallEase, delegate
         {
             matchItemState = MatchItemStates.ActiveOnGrid;
         });

@@ -3,7 +3,6 @@
 //mustafaakgul248@gmail.com
 #endregion
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -41,6 +40,7 @@ namespace CLUtils
 
         public TextIndicator FetchFromPool()
         {
+            //null can be replaced with extra Instantiate to prevent overflow pool
             return poolQueue.Count > 0 ? poolQueue.Dequeue() : null;
         }
 

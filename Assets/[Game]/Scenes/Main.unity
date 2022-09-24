@@ -8028,6 +8028,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   matchItemTypesData: {fileID: 11400000, guid: 67c57dfd06480f44c8f7a4f8e8ce99fd, type: 2}
   gridData: {fileID: 11400000, guid: 6da701570e7affe4687d540b0c889e0f, type: 2}
+  matchingData: {fileID: 11400000, guid: b1799f81acc2d6f42b186b8c267762b7, type: 2}
 --- !u!114 &1579270261
 MonoBehaviour:
   m_ObjectHideFlags: 0

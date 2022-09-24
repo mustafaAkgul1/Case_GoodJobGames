@@ -8,7 +8,7 @@ using System;
 
 namespace CLUtils
 {
-    public class SingletonOperator<T> : MonoBehaviour where T : MonoBehaviour
+    public class DontDestroySingletonOperator<T> : MonoBehaviour where T : MonoBehaviour
     {
         private static T _instance;
 
@@ -24,6 +24,7 @@ namespace CLUtils
             else
             {
                 _instance = this as T;
+                DontDestroyOnLoad(gameObject);
             }
         }
 

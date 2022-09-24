@@ -6,21 +6,20 @@ using CLUtils;
 
 public class GridTile : Operator, IClickable
 {
-    [Header("General Variables")]
-    int testInt2;
-
-    [Header("References")]
-    GameObject test;
-
-    [Space(10)]
     [Header("! Debug !")]
     public MatchItem activeMatchItem;
     public List<GridTile> neighbourTiles = new();
     public Vector2Int gridIndex;
+    Transform _transform;
+
+     void Awake()
+    {
+        _transform = transform;
+    }
 
     public void InitGridTile(Vector3 _localPosition, Vector2Int _gridIndex, MatchItemTypes _matchItemType)
     {
-        transform.localPosition = _localPosition;
+        _transform.localPosition = _localPosition;
         gridIndex = _gridIndex;
 
         activeMatchItem = MatchItemPoolManager.Instance.FetchFromPool(); 
@@ -91,7 +90,7 @@ public class GridTile : Operator, IClickable
 
         if (_checkForErrorDebug && activeMatchItem)
         {
-            Debug.LogError("WTF, i have already a match item from setter : " + activeMatchItem.matchItemType, gameObject);
+            Debug.LogError("I have already a match item from setter : " + activeMatchItem.matchItemType, gameObject);
         }
 
         activeMatchItem = _matchItem;
@@ -102,7 +101,7 @@ public class GridTile : Operator, IClickable
     {
         if (activeMatchItem)
         {
-            Debug.LogWarning("WTF, i have already a match item from off grid spawn : " + activeMatchItem.matchItemType);
+            Debug.LogWarning("I have already a match item from off grid spawn : " + activeMatchItem.matchItemType);
         }
 
         activeMatchItem = _matchItem;

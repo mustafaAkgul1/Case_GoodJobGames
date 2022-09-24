@@ -38,6 +38,7 @@ public class MatchItemPoolManager : SingletonOperator<MatchItemPoolManager>
 
     public MatchItem FetchFromPool()
     {
+        //null can be replaced with extra Instantiate to prevent overflow pool
         return poolQueue.Count > 0 ? poolQueue.Dequeue() : null;
     }
 
