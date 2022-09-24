@@ -11,10 +11,13 @@ public class GridTile : Operator, IClickable
     public List<GridTile> neighbourTiles = new();
     public Vector2Int gridIndex;
     Transform _transform;
+    FeelingDataSO feelingData;
+    Sequence bubbleSequence;
 
-     void Awake()
+    void Awake()
     {
         _transform = transform;
+        feelingData = DataManager.Instance.feelingData;
     }
 
     public void InitGridTile(Vector3 _localPosition, Vector2Int _gridIndex, MatchItemTypes _matchItemType)
@@ -22,7 +25,7 @@ public class GridTile : Operator, IClickable
         _transform.localPosition = _localPosition;
         gridIndex = _gridIndex;
 
-        activeMatchItem = MatchItemPoolManager.Instance.FetchFromPool(); 
+        activeMatchItem = MatchItemPoolManager.Instance.FetchFromPool();
         activeMatchItem.SpawnOnGridTile(this, _matchItemType);
     }
 
@@ -43,14 +46,24 @@ public class GridTile : Operator, IClickable
             return;
         }
 
-        TriggerClickFeeling();
-
         Anounce(EventManager<object[]>.OnGridClicked, this);
     }
 
-    void TriggerClickFeeling()
+    public void TriggerClickBubble()
     {
-        //TODO : tween rotation
+        ResetBubbleTween();
+
+        bubbleSequence = DOTween.Sequence();
+
+        bubbleSequence
+            .Join(_transform.DOPunchRotation(Vector3.forward * feelingData.gridBubbleRotationFactor * (Random.value >= 0.5f ? 1f : -1f), feelingData.gridBubbleRotationDuration))
+            .Join(_transform.DOPunchScale(Vector3.one * feelingData.gridBubbleScaleFactor, feelingData.gridBubbleScaleDuration))
+        ;
+
+        bubbleSequence
+            .SetEase(Ease.Linear)
+            .SetLink(gameObject)
+            ;
     }
 
     public bool CheckMatchable()
@@ -76,8 +89,10 @@ public class GridTile : Operator, IClickable
 
     public void Matched(GridTile _gridTile)
     {
-        MatchItemPoolManager.Instance.AddToPool(activeMatchItem);
+        activeMatchItem.Matched();
         activeMatchItem = null;
+
+        ResetBubbleTween();
     }
 
     public void SetActiveMatchItem(MatchItem _matchItem, bool _checkForErrorDebug = true)
@@ -111,6 +126,18 @@ public class GridTile : Operator, IClickable
     public void ChangeMatchItemSprite(Sprite _sprite)
     {
         activeMatchItem.ChangeGroupSprite(_sprite);
+    }
+
+    void ResetBubbleTween()
+    {
+        if (bubbleSequence != null)
+        {
+            bubbleSequence.Kill(true);
+            bubbleSequence = null;
+        }
+
+        _transform.localEulerAngles = Vector3.zero;
+        _transform.localScale = Vector3.one;
     }
 
 } // class

@@ -124,6 +124,7 @@ public class GridManager : Operator
 
         if (!_clickedGridTile.CheckMatchable())
         {
+            _clickedGridTile.TriggerClickBubble();
             return;
         }
 

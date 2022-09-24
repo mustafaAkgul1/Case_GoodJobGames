@@ -8,6 +8,6 @@ public class DataManager : SingletonOperator<DataManager>
     [Header("References")]
     public MatchItemTypesDataSO matchItemTypesData;
     public GridDataSO gridData;
-    public MatchingDataSO matchingData;
+    public FeelingDataSO feelingData;
 
 } // class

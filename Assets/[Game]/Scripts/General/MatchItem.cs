@@ -5,17 +5,19 @@ using CLUtils;
 public class MatchItem : Operator
 {
     [Header("References")]
-    public SpriteRenderer itemImage;
+    [SerializeField] SpriteRenderer itemImage;
+    [SerializeField] ParticleSystem destroyVFX;
 
     [Space(10)]
     [Header("! Debug !")]
-    public MatchItemStates matchItemState;
     public MatchItemTypes matchItemType;
-    public GridTile boundGridTile;
+    [SerializeField] MatchItemStates matchItemState;
+    [SerializeField] GridTile boundGridTile;
     Transform poolHolder;
     Tween movingTween;
     Transform _transform;
-    MatchingDataSO matchingData;
+    FeelingDataSO matchingData;
+    ParticleSystem.TextureSheetAnimationModule destroyVFXTextureModule;
 
     public enum MatchItemStates
     {
@@ -28,7 +30,8 @@ public class MatchItem : Operator
     void Awake()
     {
         _transform = transform;
-        matchingData = DataManager.Instance.matchingData;
+        matchingData = DataManager.Instance.feelingData;
+        destroyVFXTextureModule = destroyVFX.textureSheetAnimation;
     }
 
     public void DisableFromPool(Transform _poolHolder)
@@ -39,6 +42,8 @@ public class MatchItem : Operator
         _transform.SetParent(poolHolder, false);
 
         matchItemState = MatchItemStates.OnHold;
+
+        itemImage.enabled = true;
     }
 
     public void SpawnOnGridTile(GridTile _gridTile, MatchItemTypes _matchItemType)
@@ -104,11 +109,24 @@ public class MatchItem : Operator
     void InitGroupSprite()
     {
         itemImage.sprite = DataManager.Instance.matchItemTypesData.matchItemSprites[matchItemType][0];
+        destroyVFXTextureModule.SetSprite(0, itemImage.sprite);
     }
 
     public void ChangeGroupSprite(Sprite _sprite)
     {
         itemImage.sprite = _sprite;
+        destroyVFXTextureModule.SetSprite(0, _sprite);
+    }
+
+    public void Matched()
+    {
+        itemImage.enabled = false;
+        destroyVFX.Play();
+
+        StartCoroutine(Utils.DelayerCor(destroyVFX.main.duration, delegate
+        {
+            MatchItemPoolManager.Instance.AddToPool(this);
+        }));
     }
 
     void TweenToLocalZero(float _duration, Ease _ease, System.Action _callBack)
