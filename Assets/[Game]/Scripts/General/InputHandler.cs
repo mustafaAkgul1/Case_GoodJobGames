@@ -4,7 +4,7 @@ using CLUtils;
 public class InputHandler : Operator
 {
     [Header("General Variables")]
-    public LayerMask interactableMask;
+    [SerializeField] LayerMask interactableMask;
 
     [Space(10)]
     [Header("! Debug !")]

@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using CLUtils;
@@ -8,8 +7,8 @@ using Sirenix.OdinInspector;
 public class GridManager : Operator
 {
     [Header("References")]
-    public GridTile gridTilePrefab;
-    public Transform gridTileHolder;
+    [SerializeField] GridTile gridTilePrefab;
+    [SerializeField] Transform gridTileHolder;
 
     [Space(10)]
     [Header("! Debug !")]
