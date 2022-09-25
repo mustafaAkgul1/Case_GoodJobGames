@@ -111,7 +111,11 @@ public class MatchItem : Operator, IPoolable
 
     void TweenToLocalZero(float _duration, AnimationCurve _ease)
     {
-        movingTween.Kill();
+        if (movingTween != null)
+        {
+            movingTween.Kill();
+            movingTween = null;
+        }
 
         movingTween = _transform.DOLocalMove(Vector3.zero, _duration)
             .SetEase(_ease)
